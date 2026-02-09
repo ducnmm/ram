@@ -8,7 +8,7 @@ const RAM_BACKEND_URL = import.meta.env.VITE_RAM_BACKEND_URL || 'http://localhos
 export const SUI_PACKAGE_ID = import.meta.env.VITE_SUI_PACKAGE_ID || '0x8d6ef0202e592745340d9c96efb32dba98191ea981eea5ad7ba8731f1545e216';
 export const RAM_REGISTRY_ID = import.meta.env.VITE_RAM_REGISTRY_ID || '0xc91902a23f2b159175da4b9728cb6018c51dc42b2437b59f6cfe54f189206ae4';
 export const ENCLAVE_ID = import.meta.env.VITE_ENCLAVE_ID || '0x1d154f7d2c12f7e611d39cc1a261e56eda39bcdc09c7b0f973c67ac67e8094aa';
-export const USER_HANDLE = import.meta.env.VITE_USER_HANDLE || 'alice';
+
 
 // ============================================================================
 // Types

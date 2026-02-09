@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
-import { SUI_PACKAGE_ID, RAM_REGISTRY_ID, USER_HANDLE } from '../services/ramApi'
+import { SUI_PACKAGE_ID, RAM_REGISTRY_ID } from '../services/ramApi'
 import type { BioAuthResponse } from '../services/ramApi'
+import { useRamWallet } from '../hooks/useRamWallet'
 import './TransferPanel.css'
 import { VoiceAuth } from './VoiceAuth'
 
@@ -34,7 +35,8 @@ export function TransferPanel() {
     const [isAddressFocused, setIsAddressFocused] = useState(false)
 
     // Current user's handle (would come from auth context in real app)
-    const currentUserHandle = USER_HANDLE
+    const { walletInfo } = useRamWallet()
+    const currentUserHandle = walletInfo?.handle || ''
 
     // Query sender's wallet when account changes
     useEffect(() => {

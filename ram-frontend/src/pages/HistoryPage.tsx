@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCurrentAccount } from '@mysten/dapp-kit'
 import { getWalletEvents, type WalletEvent } from '../services/ramApi'
+import { useRamWallet } from '../hooks/useRamWallet'
 import './HistoryPage.css'
 
 export function HistoryPage() {
@@ -9,7 +10,8 @@ export function HistoryPage() {
     const account = useCurrentAccount()
     const [events, setEvents] = useState<WalletEvent[]>([])
     const [loading, setLoading] = useState(true)
-    const [handle, setHandle] = useState('ducnmm') // TODO: Get from user's wallet NFT
+    const { walletInfo } = useRamWallet()
+    const handle = walletInfo?.handle || null
 
     useEffect(() => {
         if (account?.address && handle) {
@@ -21,7 +23,7 @@ export function HistoryPage() {
 
     const loadEvents = async () => {
         if (!handle) return
-        
+
         try {
             setLoading(true)
             const data = await getWalletEvents({ handle, limit: 50 })
@@ -114,7 +116,7 @@ export function HistoryPage() {
                                     )}
                                     <div className="transaction-digest">
                                         <span className="label">Tx:</span>
-                                        <a 
+                                        <a
                                             href={`https://suiscan.xyz/testnet/tx/${event.tx_digest}`}
                                             target="_blank"
                                             rel="noopener noreferrer"

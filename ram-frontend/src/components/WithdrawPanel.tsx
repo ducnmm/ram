@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
-import { SUI_PACKAGE_ID, RAM_REGISTRY_ID, ENCLAVE_ID, requestWithdrawSignature, USER_HANDLE } from '../services/ramApi'
+import { SUI_PACKAGE_ID, RAM_REGISTRY_ID, ENCLAVE_ID, requestWithdrawSignature } from '../services/ramApi'
 import type { BioAuthResponse } from '../services/ramApi'
+import { useRamWallet } from '../hooks/useRamWallet'
 import './WithdrawPanel.css'
 import { VoiceAuth } from './VoiceAuth'
 
@@ -23,8 +24,8 @@ export function WithdrawPanel() {
     const [walletId, setWalletId] = useState<string | null>(null)
     const [lastResponse, setLastResponse] = useState<BioAuthResponse | null>(null)
 
-    // Current user's handle (would come from auth context in real app)
-    const currentUserHandle = USER_HANDLE
+    const { walletInfo } = useRamWallet()
+    const currentUserHandle = walletInfo?.handle || ''
 
     // Query wallet when account changes
     useEffect(() => {

@@ -1,0 +1,316 @@
+[warning] Client/Server api version mismatch, client api version : 1.56.2, server api version : 1.65.0
+[warning] CLI's protocol version is 95, but the active network's protocol version is 110. 
+ Consider installing the latest version of the CLI - https://docs.sui.io/guides/developer/getting-started/sui-install 
+
+ If publishing/upgrading returns a dependency verification error, then install the latest CLI version.
+[Note]: Dependency sources are no longer verified automatically during publication and upgrade. You can pass the `--verify-deps` option if you would like to verify them as part of publication or upgrade.
+[warning]: The network is using protocol version ProtocolVersion(95), but this binary only recognizes protocol version ProtocolVersion(110); the system packages used for compilation (e.g. MoveStdlib) may be out of date. If you have errors related to system packages, you may need to update your CLI.
+INCLUDING DEPENDENCY enclave
+INCLUDING DEPENDENCY Bridge
+INCLUDING DEPENDENCY SuiSystem
+INCLUDING DEPENDENCY Sui
+INCLUDING DEPENDENCY MoveStdlib
+BUILDING ram
+[0m[1m[38;5;11mwarning[W09002][0m[1m: unused variable[0m
+   [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/transfers.move:25:9
+   [0m[34m│[0m
+[0m[34m25[0m [0m[34m│[0m         [0m[33msignature[0m: &vector<u8>,
+   [0m[34m│[0m         [0m[33m^^^^^^^^^[0m [0m[33mUnused parameter 'signature'. Consider removing or prefixing with an underscore: '_signature'[0m
+   [0m[34m│[0m
+   [0m[34m=[0m This warning can be suppressed with '#[allow(unused_variable)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W09002][0m[1m: unused variable[0m
+   [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/transfers.move:26:9
+   [0m[34m│[0m
+[0m[34m26[0m [0m[34m│[0m         [0m[33menclave[0m: &Enclave<E>,
+   [0m[34m│[0m         [0m[33m^^^^^^^[0m [0m[33mUnused parameter 'enclave'. Consider removing or prefixing with an underscore: '_enclave'[0m
+   [0m[34m│[0m
+   [0m[34m=[0m This warning can be suppressed with '#[allow(unused_variable)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W04037][0m[1m: deprecated usage[0m
+   [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/transfers.move:34:40
+   [0m[34m│[0m
+[0m[34m34[0m [0m[34m│[0m         let expected_type = type_name::[0m[33mget[0m<T>().into_string().into_bytes();
+   [0m[34m│[0m                                        [0m[33m^^^[0m [0m[33mThe function 'std::type_name::get' is deprecated: Renamed to `with_defining_ids` for clarity.[0m
+   [0m[34m│[0m
+   [0m[34m=[0m This warning can be suppressed with '#[allow(deprecated_usage)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W04037][0m[1m: deprecated usage[0m
+   [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/transfers.move:64:24
+   [0m[34m│[0m
+[0m[34m64[0m [0m[34m│[0m             type_name::[0m[33mget[0m<T>().into_string().to_string(),
+   [0m[34m│[0m                        [0m[33m^^^[0m [0m[33mThe function 'std::type_name::get' is deprecated: Renamed to `with_defining_ids` for clarity.[0m
+   [0m[34m│[0m
+   [0m[34m=[0m This warning can be suppressed with '#[allow(deprecated_usage)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W04037][0m[1m: deprecated usage[0m
+   [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/transfers.move:95:24
+   [0m[34m│[0m
+[0m[34m95[0m [0m[34m│[0m             type_name::[0m[33mget[0m<T>().into_string().to_string(),
+   [0m[34m│[0m                        [0m[33m^^^[0m [0m[33mThe function 'std::type_name::get' is deprecated: Renamed to `with_defining_ids` for clarity.[0m
+   [0m[34m│[0m
+   [0m[34m=[0m This warning can be suppressed with '#[allow(deprecated_usage)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W04037][0m[1m: deprecated usage[0m
+    [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/transfers.move:107:35
+    [0m[34m│[0m
+[0m[34m107[0m [0m[34m│[0m         let type_key = type_name::[0m[33mget[0m<T>().into_string();
+    [0m[34m│[0m                                   [0m[33m^^^[0m [0m[33mThe function 'std::type_name::get' is deprecated: Renamed to `with_defining_ids` for clarity.[0m
+    [0m[34m│[0m
+    [0m[34m=[0m This warning can be suppressed with '#[allow(deprecated_usage)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W09002][0m[1m: unused variable[0m
+   [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/bioguard.move:31:9
+   [0m[34m│[0m
+[0m[34m31[0m [0m[34m│[0m         [0m[33mtranscript[0m: vector<u8>,
+   [0m[34m│[0m         [0m[33m^^^^^^^^^^[0m [0m[33mUnused parameter 'transcript'. Consider removing or prefixing with an underscore: '_transcript'[0m
+   [0m[34m│[0m
+   [0m[34m=[0m This warning can be suppressed with '#[allow(unused_variable)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W09002][0m[1m: unused variable[0m
+   [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/bioguard.move:33:9
+   [0m[34m│[0m
+[0m[34m33[0m [0m[34m│[0m         [0m[33msignature[0m: &vector<u8>,
+   [0m[34m│[0m         [0m[33m^^^^^^^^^[0m [0m[33mUnused parameter 'signature'. Consider removing or prefixing with an underscore: '_signature'[0m
+   [0m[34m│[0m
+   [0m[34m=[0m This warning can be suppressed with '#[allow(unused_variable)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W09002][0m[1m: unused variable[0m
+   [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/bioguard.move:34:9
+   [0m[34m│[0m
+[0m[34m34[0m [0m[34m│[0m         [0m[33menclave[0m: &Enclave<T>,
+   [0m[34m│[0m         [0m[33m^^^^^^^[0m [0m[33mUnused parameter 'enclave'. Consider removing or prefixing with an underscore: '_enclave'[0m
+   [0m[34m│[0m
+   [0m[34m=[0m This warning can be suppressed with '#[allow(unused_variable)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W09002][0m[1m: unused variable[0m
+   [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/wallet.move:24:9
+   [0m[34m│[0m
+[0m[34m24[0m [0m[34m│[0m         [0m[33msignature[0m: &vector<u8>,
+   [0m[34m│[0m         [0m[33m^^^^^^^^^[0m [0m[33mUnused parameter 'signature'. Consider removing or prefixing with an underscore: '_signature'[0m
+   [0m[34m│[0m
+   [0m[34m=[0m This warning can be suppressed with '#[allow(unused_variable)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W09002][0m[1m: unused variable[0m
+   [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/wallet.move:25:9
+   [0m[34m│[0m
+[0m[34m25[0m [0m[34m│[0m         [0m[33menclave[0m: &Enclave<T>,
+   [0m[34m│[0m         [0m[33m^^^^^^^[0m [0m[33mUnused parameter 'enclave'. Consider removing or prefixing with an underscore: '_enclave'[0m
+   [0m[34m│[0m
+   [0m[34m=[0m This warning can be suppressed with '#[allow(unused_variable)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W09002][0m[1m: unused variable[0m
+   [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/wallet.move:89:9
+   [0m[34m│[0m
+[0m[34m89[0m [0m[34m│[0m         [0m[33msignature[0m: &vector<u8>,
+   [0m[34m│[0m         [0m[33m^^^^^^^^^[0m [0m[33mUnused parameter 'signature'. Consider removing or prefixing with an underscore: '_signature'[0m
+   [0m[34m│[0m
+   [0m[34m=[0m This warning can be suppressed with '#[allow(unused_variable)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W09002][0m[1m: unused variable[0m
+   [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/wallet.move:90:9
+   [0m[34m│[0m
+[0m[34m90[0m [0m[34m│[0m         [0m[33menclave[0m: &Enclave<T>,
+   [0m[34m│[0m         [0m[33m^^^^^^^[0m [0m[33mUnused parameter 'enclave'. Consider removing or prefixing with an underscore: '_enclave'[0m
+   [0m[34m│[0m
+   [0m[34m=[0m This warning can be suppressed with '#[allow(unused_variable)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W04037][0m[1m: deprecated usage[0m
+    [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/wallet.move:128:35
+    [0m[34m│[0m
+[0m[34m128[0m [0m[34m│[0m         let type_key = type_name::[0m[33mget[0m<T>().into_string();
+    [0m[34m│[0m                                   [0m[33m^^^[0m [0m[33mThe function 'std::type_name::get' is deprecated: Renamed to `with_defining_ids` for clarity.[0m
+    [0m[34m│[0m
+    [0m[34m=[0m This warning can be suppressed with '#[allow(deprecated_usage)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W04037][0m[1m: deprecated usage[0m
+    [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/wallet.move:164:35
+    [0m[34m│[0m
+[0m[34m164[0m [0m[34m│[0m         let type_key = type_name::[0m[33mget[0m<T>().into_string();
+    [0m[34m│[0m                                   [0m[33m^^^[0m [0m[33mThe function 'std::type_name::get' is deprecated: Renamed to `with_defining_ids` for clarity.[0m
+    [0m[34m│[0m
+    [0m[34m=[0m This warning can be suppressed with '#[allow(deprecated_usage)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W04037][0m[1m: deprecated usage[0m
+    [0m[34m┌─[0m /Users/ducnmm/Documents/ducnmm/ram/ram-nautilus/move/ram/sources/wallet.move:188:35
+    [0m[34m│[0m
+[0m[34m188[0m [0m[34m│[0m         let type_key = type_name::[0m[33mget[0m<T>().into_string();
+    [0m[34m│[0m                                   [0m[33m^^^[0m [0m[33mThe function 'std::type_name::get' is deprecated: Renamed to `with_defining_ids` for clarity.[0m
+    [0m[34m│[0m
+    [0m[34m=[0m This warning can be suppressed with '#[allow(deprecated_usage)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+Skipping dependency verification
+Transaction Digest: AVghi9wugFEYrC3yFfBtfVyr2ZK4aDzrqwdr5sdJBUEV
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Transaction Data                                                                                             │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Sender: 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f                                   │
+│ Gas Owner: 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f                                │
+│ Gas Budget: 200000000 MIST                                                                                   │
+│ Gas Price: 1000 MIST                                                                                         │
+│ Gas Payment:                                                                                                 │
+│  ┌──                                                                                                         │
+│  │ ID: 0xcb0ae52771b07a03f8560465f0fc77407ae9b2143d67e1862ab1215d80782765                                    │
+│  │ Version: 751814507                                                                                        │
+│  │ Digest: 5X17yAvAKE8gDzj92fxA5fWvzLbfUD1HfAMsEFG4zSYb                                                      │
+│  └──                                                                                                         │
+│                                                                                                              │
+│ Transaction Kind: Programmable                                                                               │
+│ ╭──────────────────────────────────────────────────────────────────────────────────────────────────────────╮ │
+│ │ Input Objects                                                                                            │ │
+│ ├──────────────────────────────────────────────────────────────────────────────────────────────────────────┤ │
+│ │ 0   Pure Arg: Type: address, Value: "0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f" │ │
+│ ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────╯ │
+│ ╭─────────────────────────────────────────────────────────────────────────╮                                  │
+│ │ Commands                                                                │                                  │
+│ ├─────────────────────────────────────────────────────────────────────────┤                                  │
+│ │ 0  Publish:                                                             │                                  │
+│ │  ┌                                                                      │                                  │
+│ │  │ Dependencies:                                                        │                                  │
+│ │  │   0x0000000000000000000000000000000000000000000000000000000000000001 │                                  │
+│ │  │   0x0000000000000000000000000000000000000000000000000000000000000002 │                                  │
+│ │  │   0x083adfa954b9a1df278c84ee51785c922b266ac41f9dab5feb2b09ad4f3cecd1 │                                  │
+│ │  └                                                                      │                                  │
+│ │                                                                         │                                  │
+│ │ 1  TransferObjects:                                                     │                                  │
+│ │  ┌                                                                      │                                  │
+│ │  │ Arguments:                                                           │                                  │
+│ │  │   Result 0                                                           │                                  │
+│ │  │ Address: Input  0                                                    │                                  │
+│ │  └                                                                      │                                  │
+│ ╰─────────────────────────────────────────────────────────────────────────╯                                  │
+│                                                                                                              │
+│ Signatures:                                                                                                  │
+│    McP6FBfV+CK5li3CPYfEjkU6HfQpXnLW4XVkH08IWR+fqKFElaaX+xuy9QTYaDhV1KEqJ8KtMGAFisxC2b9mDw==                  │
+│                                                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭───────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Transaction Effects                                                                               │
+├───────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Digest: AVghi9wugFEYrC3yFfBtfVyr2ZK4aDzrqwdr5sdJBUEV                                              │
+│ Status: Success                                                                                   │
+│ Executed Epoch: 1004                                                                              │
+│                                                                                                   │
+│ Created Objects:                                                                                  │
+│  ┌──                                                                                              │
+│  │ ID: 0x520a6d0a96327df51b6cee6148de1a19640efcc463ab49909fe64d1aaf44f7c9                         │
+│  │ Owner: Account Address ( 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f )  │
+│  │ Version: 751814508                                                                             │
+│  │ Digest: J7NoEFmcDCkE6LZpj3j8vjUARveANDpvnWRkdPSDTuaP                                           │
+│  └──                                                                                              │
+│  ┌──                                                                                              │
+│  │ ID: 0x736b816583ded8dbcb298fd51499fa0ec4d27d942fd8163e90935ffd8b12d7f8                         │
+│  │ Owner: Immutable                                                                               │
+│  │ Version: 1                                                                                     │
+│  │ Digest: 7bXZP6ffmQL83Rx6joPxrhswK4qQ22NTJVpUPxPueRAs                                           │
+│  └──                                                                                              │
+│  ┌──                                                                                              │
+│  │ ID: 0xadf8d2f27fc8cf4fa2d83af1b6310a775039990cd5cd7e441d700a9324fdc708                         │
+│  │ Owner: Shared( 751814508 )                                                                     │
+│  │ Version: 751814508                                                                             │
+│  │ Digest: 6hQzwppmQqDbgSHfHPXBQU3J9pr2LXhG3okNJzhogX3L                                           │
+│  └──                                                                                              │
+│  ┌──                                                                                              │
+│  │ ID: 0xcbbdd7f13b10035dddcc670eb9c5ff4f784d5851355f89e1f671ab03103720ca                         │
+│  │ Owner: Account Address ( 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f )  │
+│  │ Version: 751814508                                                                             │
+│  │ Digest: HPnXRECYM7fpwWuUNxTSrRRhK924nv6KzwuKw7tMVtng                                           │
+│  └──                                                                                              │
+│  ┌──                                                                                              │
+│  │ ID: 0xe2f7cc9ee82b7946305a5ad1f417a39205d7242c3c2934e234c15687c58f2144                         │
+│  │ Owner: Shared( 751814508 )                                                                     │
+│  │ Version: 751814508                                                                             │
+│  │ Digest: A3up5quQFoKHrmQGusZ8az1pPZw89jpQwD5MazmBurxH                                           │
+│  └──                                                                                              │
+│ Mutated Objects:                                                                                  │
+│  ┌──                                                                                              │
+│  │ ID: 0xcb0ae52771b07a03f8560465f0fc77407ae9b2143d67e1862ab1215d80782765                         │
+│  │ Owner: Account Address ( 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f )  │
+│  │ Version: 751814508                                                                             │
+│  │ Digest: AyKQDdfFEfkztrLCHe3T5DLxKHTiPC3isk3ZGCM335of                                           │
+│  └──                                                                                              │
+│ Gas Object:                                                                                       │
+│  ┌──                                                                                              │
+│  │ ID: 0xcb0ae52771b07a03f8560465f0fc77407ae9b2143d67e1862ab1215d80782765                         │
+│  │ Owner: Account Address ( 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f )  │
+│  │ Version: 751814508                                                                             │
+│  │ Digest: AyKQDdfFEfkztrLCHe3T5DLxKHTiPC3isk3ZGCM335of                                           │
+│  └──                                                                                              │
+│ Gas Cost Summary:                                                                                 │
+│    Storage Cost: 82460000 MIST                                                                    │
+│    Computation Cost: 1000000 MIST                                                                 │
+│    Storage Rebate: 978120 MIST                                                                    │
+│    Non-refundable Storage Fee: 9880 MIST                                                          │
+│                                                                                                   │
+│ Transaction Dependencies:                                                                         │
+│    5vmJgrgGqcUVnsyHmNxG9q4YxzL8D6H6q7imkQ6KpkE9                                                   │
+│    8ZGaWUUUxNqB6EooQC7cngJccxgZZRMYgbzKRLSnExHM                                                   │
+│    B5W8jPYhhxoLZswrEnZ6z6HUog9jwHciKTt3NEbE5p73                                                   │
+│    DzZEjNoUzqraTYaye6R2XfcfgosUVp4tKvAM9B2fnws8                                                   │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─────────────────────────────╮
+│ No transaction block events │
+╰─────────────────────────────╯
+
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Object Changes                                                                                                                                                                           │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Created Objects:                                                                                                                                                                         │
+│  ┌──                                                                                                                                                                                     │
+│  │ ObjectID: 0x520a6d0a96327df51b6cee6148de1a19640efcc463ab49909fe64d1aaf44f7c9                                                                                                          │
+│  │ Sender: 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f                                                                                                            │
+│  │ Owner: Account Address ( 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f )                                                                                         │
+│  │ ObjectType: 0x83adfa954b9a1df278c84ee51785c922b266ac41f9dab5feb2b09ad4f3cecd1::enclave::Cap<0x736b816583ded8dbcb298fd51499fa0ec4d27d942fd8163e90935ffd8b12d7f8::core::RAM>            │
+│  │ Version: 751814508                                                                                                                                                                    │
+│  │ Digest: J7NoEFmcDCkE6LZpj3j8vjUARveANDpvnWRkdPSDTuaP                                                                                                                                  │
+│  └──                                                                                                                                                                                     │
+│  ┌──                                                                                                                                                                                     │
+│  │ ObjectID: 0xadf8d2f27fc8cf4fa2d83af1b6310a775039990cd5cd7e441d700a9324fdc708                                                                                                          │
+│  │ Sender: 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f                                                                                                            │
+│  │ Owner: Shared( 751814508 )                                                                                                                                                            │
+│  │ ObjectType: 0x83adfa954b9a1df278c84ee51785c922b266ac41f9dab5feb2b09ad4f3cecd1::enclave::EnclaveConfig<0x736b816583ded8dbcb298fd51499fa0ec4d27d942fd8163e90935ffd8b12d7f8::core::RAM>  │
+│  │ Version: 751814508                                                                                                                                                                    │
+│  │ Digest: 6hQzwppmQqDbgSHfHPXBQU3J9pr2LXhG3okNJzhogX3L                                                                                                                                  │
+│  └──                                                                                                                                                                                     │
+│  ┌──                                                                                                                                                                                     │
+│  │ ObjectID: 0xcbbdd7f13b10035dddcc670eb9c5ff4f784d5851355f89e1f671ab03103720ca                                                                                                          │
+│  │ Sender: 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f                                                                                                            │
+│  │ Owner: Account Address ( 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f )                                                                                         │
+│  │ ObjectType: 0x2::package::UpgradeCap                                                                                                                                                  │
+│  │ Version: 751814508                                                                                                                                                                    │
+│  │ Digest: HPnXRECYM7fpwWuUNxTSrRRhK924nv6KzwuKw7tMVtng                                                                                                                                  │
+│  └──                                                                                                                                                                                     │
+│  ┌──                                                                                                                                                                                     │
+│  │ ObjectID: 0xe2f7cc9ee82b7946305a5ad1f417a39205d7242c3c2934e234c15687c58f2144                                                                                                          │
+│  │ Sender: 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f                                                                                                            │
+│  │ Owner: Shared( 751814508 )                                                                                                                                                            │
+│  │ ObjectType: 0x736b816583ded8dbcb298fd51499fa0ec4d27d942fd8163e90935ffd8b12d7f8::core::RamRegistry                                                                                     │
+│  │ Version: 751814508                                                                                                                                                                    │
+│  │ Digest: A3up5quQFoKHrmQGusZ8az1pPZw89jpQwD5MazmBurxH                                                                                                                                  │
+│  └──                                                                                                                                                                                     │
+│ Mutated Objects:                                                                                                                                                                         │
+│  ┌──                                                                                                                                                                                     │
+│  │ ObjectID: 0xcb0ae52771b07a03f8560465f0fc77407ae9b2143d67e1862ab1215d80782765                                                                                                          │
+│  │ Sender: 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f                                                                                                            │
+│  │ Owner: Account Address ( 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f )                                                                                         │
+│  │ ObjectType: 0x2::coin::Coin<0x2::sui::SUI>                                                                                                                                            │
+│  │ Version: 751814508                                                                                                                                                                    │
+│  │ Digest: AyKQDdfFEfkztrLCHe3T5DLxKHTiPC3isk3ZGCM335of                                                                                                                                  │
+│  └──                                                                                                                                                                                     │
+│ Published Objects:                                                                                                                                                                       │
+│  ┌──                                                                                                                                                                                     │
+│  │ PackageID: 0x736b816583ded8dbcb298fd51499fa0ec4d27d942fd8163e90935ffd8b12d7f8                                                                                                         │
+│  │ Version: 1                                                                                                                                                                            │
+│  │ Digest: 7bXZP6ffmQL83Rx6joPxrhswK4qQ22NTJVpUPxPueRAs                                                                                                                                  │
+│  │ Modules: bioguard, core, events, transfers, wallet                                                                                                                                    │
+│  └──                                                                                                                                                                                     │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭───────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Balance Changes                                                                                   │
+├───────────────────────────────────────────────────────────────────────────────────────────────────┤
+│  ┌──                                                                                              │
+│  │ Owner: Account Address ( 0x3103b5ddad293bb00cf9b54061684293a829f2a65a7c560925e954f6e14a781f )  │
+│  │ CoinType: 0x2::sui::SUI                                                                        │
+│  │ Amount: -82481880                                                                              │
+│  └──                                                                                              │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────╯

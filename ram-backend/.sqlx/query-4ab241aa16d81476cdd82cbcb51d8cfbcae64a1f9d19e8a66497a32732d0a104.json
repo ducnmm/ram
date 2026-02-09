@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ram_events (\n                event_type, transaction_digest, timestamp_ms,\n                handle, from_handle, to_handle, amount\n            ) VALUES ($1, $2, $3, $4, $5, $6, $7)\n            ON CONFLICT (transaction_digest, event_type, handle) DO NOTHING\n            RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4ab241aa16d81476cdd82cbcb51d8cfbcae64a1f9d19e8a66497a32732d0a104"
+}

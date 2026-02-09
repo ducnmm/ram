@@ -1,0 +1,14 @@
+[package]
+name = "ram"
+edition = "2024.beta"
+
+[dependencies]
+enclave = { local = "../enclave" }
+
+[addresses]
+ram = "0x0"
+enclave = "0x083adfa954b9a1df278c84ee51785c922b266ac41f9dab5feb2b09ad4f3cecd1"
+
+[dev-dependencies]
+
+[dev-addresses]

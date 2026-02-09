@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \n                event_type, transaction_digest as tx_digest, \n                to_timestamp(timestamp_ms / 1000.0) as \"timestamp!\",\n                handle, from_handle, to_handle, amount\n            FROM ram_events\n            WHERE handle = $1 OR from_handle = $1 OR to_handle = $1\n            ORDER BY timestamp_ms DESC\n            LIMIT $2 OFFSET $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "event_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "tx_digest",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "timestamp!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "handle",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "from_handle",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "to_handle",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "amount",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "b835223a1b0a8acefd159a50811afa54ce4f49f426f387fafa63ee3a10205f84"
+}

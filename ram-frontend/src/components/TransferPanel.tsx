@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
-import { SUI_PACKAGE_ID, RAM_REGISTRY_ID } from '../services/ramApi'
+import { SUI_PACKAGE_ID, RAM_REGISTRY_ID, ENCLAVE_ID, ENCLAVE_PACKAGE_ID, requestTransferSignature } from '../services/ramApi'
 import type { BioAuthResponse } from '../services/ramApi'
 import { useRamWallet } from '../hooks/useRamWallet'
 import './TransferPanel.css'
 import { VoiceAuth } from './VoiceAuth'
 
-type TransferState = 'form' | 'voice-auth' | 'success' | 'locked';
+type TransferState = 'form' | 'voice-auth' | 'success';
 
 type Toast = {
     message: string;
@@ -26,6 +26,7 @@ export function TransferPanel() {
     const [toast, setToast] = useState<Toast>({ message: '', visible: false })
     const [fromWalletId, setFromWalletId] = useState<string | null>(null)
     const [toWalletId, setToWalletId] = useState<string | null>(null)
+    const [toHandle, setToHandle] = useState<string>('')
 
     // Resolution states
     const [resolvedAddress, setResolvedAddress] = useState<string>('')
@@ -44,21 +45,26 @@ export function TransferPanel() {
             setFromWalletId(null)
             return
         }
-        queryWallet(account.address, setFromWalletId)
+        queryWalletWithHandle(account.address, setFromWalletId, () => { })
     }, [account?.address])
 
     // Query recipient wallet when handle/address changes
     useEffect(() => {
         if (resolvedAddress) {
-            queryWallet(resolvedAddress, setToWalletId)
+            queryWalletWithHandle(resolvedAddress, setToWalletId, setToHandle)
         } else if (walletAddress) {
-            queryWallet(walletAddress, setToWalletId)
+            queryWalletWithHandle(walletAddress, setToWalletId, setToHandle)
         } else {
             setToWalletId(null)
+            setToHandle('')
         }
     }, [resolvedAddress, walletAddress])
 
-    const queryWallet = async (address: string, setter: (id: string | null) => void) => {
+    const queryWalletWithHandle = async (
+        address: string,
+        walletSetter: (id: string | null) => void,
+        handleSetter: (h: string) => void,
+    ) => {
         try {
             // Get registry and extract table ID
             const registryObj = await suiClient.getObject({
@@ -69,7 +75,8 @@ export function TransferPanel() {
             const tableId = registryContent?.fields?.address_to_wallet?.fields?.id?.id
 
             if (!tableId) {
-                setter(null)
+                walletSetter(null)
+                handleSetter('')
                 return
             }
 
@@ -89,16 +96,26 @@ export function TransferPanel() {
                         })
                         const fieldContent = fieldObj.data?.content as any
                         if (fieldContent?.fields?.value) {
-                            setter(fieldContent.fields.value)
+                            const wId = fieldContent.fields.value
+                            walletSetter(wId)
+
+                            // Also fetch handle from the wallet object
+                            const walletObj = await suiClient.getObject({
+                                id: wId,
+                                options: { showContent: true }
+                            })
+                            const walletContent = walletObj.data?.content as any
+                            handleSetter(walletContent?.fields?.handle || '')
                             return
                         }
                     }
                 }
             }
-            setter(null)
+            walletSetter(null)
+            handleSetter('')
         } catch (error) {
-            console.error('Failed to query wallet:', error)
-            setter(null)
+            walletSetter(null)
+            handleSetter('')
         }
     }
 
@@ -237,11 +254,6 @@ export function TransferPanel() {
         }
 
         // Debug logging
-        console.log('=== TRANSFER DEBUG ===')
-        console.log('From wallet ID:', fromWalletId)
-        console.log('To wallet ID:', toWalletId)
-        console.log('Recipient address:', resolvedAddress || walletAddress)
-        console.log('Amount:', amount)
 
         if (!fromWalletId) {
             showToast('Your wallet not found. Please create a wallet first.')
@@ -274,7 +286,6 @@ export function TransferPanel() {
         // If TO wallet doesn't exist, create it first
         if (!recipientWalletId) {
             try {
-                console.log('Creating wallet for recipient:', recipientAddress)
 
                 // Create wallet for recipient
                 const createTx = new Transaction()
@@ -298,16 +309,13 @@ export function TransferPanel() {
                         { transaction: createTx },
                         {
                             onSuccess: async (result) => {
-                                console.log('Wallet created for recipient!', result)
                                 resolve()
                             },
                             onError: (error) => {
-                                console.error('Failed to create recipient wallet:', error)
                                 const errorMsg = error.message || String(error)
 
                                 // If wallet already exists, that's fine
                                 if (errorMsg.includes('EAddressAlreadyExists')) {
-                                    console.log('Wallet already exists')
                                     resolve()
                                 } else {
                                     reject(error)
@@ -331,10 +339,8 @@ export function TransferPanel() {
 
                 // Update state for future use
                 setToWalletId(recipientWalletId)
-                console.log('Recipient wallet ID:', recipientWalletId)
 
             } catch (error) {
-                console.error('Wallet creation error:', error)
                 showToast('Failed to create recipient wallet')
                 setTransferState('form')
                 return
@@ -350,74 +356,142 @@ export function TransferPanel() {
 
         // Final validation - ensure both wallets are valid
         if (!fromWalletId || typeof fromWalletId !== 'string' || !fromWalletId.startsWith('0x')) {
-            console.error('Invalid fromWalletId:', fromWalletId)
             showToast('Your wallet ID is invalid. Please refresh and try again.')
             setTransferState('form')
             return
         }
 
         if (!recipientWalletId || typeof recipientWalletId !== 'string' || !recipientWalletId.startsWith('0x')) {
-            console.error('Invalid recipientWalletId:', recipientWalletId)
             showToast('Recipient wallet ID is invalid')
             setTransferState('form')
             return
         }
 
-        console.log('Transfer from:', fromWalletId, 'to:', recipientWalletId)
 
         try {
             const amountInMist = Math.floor(parseFloat(amount) * 1_000_000_000)
+            const coinTypeStr = '0000000000000000000000000000000000000000000000000000000000000002::sui::SUI'
 
-            // Create transaction with transfer_with_wallet (direct wallet auth, no enclave needed)
-            const tx = new Transaction()
+            // Determine recipient handle for enclave signature
+            const recipientHandle = toHandle || handleName || `user_${(resolvedAddress || walletAddress).slice(2, 8)}`
 
-            tx.moveCall({
-                target: `${SUI_PACKAGE_ID}::transfers::transfer_with_wallet`,
+            // Step 1: Get enclave signature for the transfer
+            const transferSig = await requestTransferSignature(
+                currentUserHandle,
+                recipientHandle,
+                amountInMist,
+                coinTypeStr,
+            )
+
+            // === TX1: apply_bioauth (always executes on-chain) ===
+            const bioauthTx = new Transaction()
+
+            // Convert BioAuth signature hex to bytes
+            const bioSigHex = response.signature
+            const bioSigBytes: number[] = []
+            for (let i = 0; i < bioSigHex.length; i += 2) {
+                bioSigBytes.push(parseInt(bioSigHex.substring(i, i + 2), 16))
+            }
+
+            bioauthTx.moveCall({
+                target: `${SUI_PACKAGE_ID}::bioguard::apply_bioauth`,
                 arguments: [
-                    tx.object(fromWalletId),
-                    tx.object(recipientWalletId),
-                    tx.pure.u64(amountInMist),
-                    tx.object('0x6'), // Clock object
+                    bioauthTx.object(fromWalletId!),
+                    bioauthTx.pure('vector<u8>', response.payload.handle),
+                    bioauthTx.pure.u64(response.payload.amount),
+                    bioauthTx.pure.u8(response.payload.result),
+                    bioauthTx.pure('vector<u8>', response.payload.transcript),
+                    bioauthTx.pure.u64(response.timestamp_ms),
+                    bioauthTx.pure('vector<u8>', bioSigBytes),
+                    bioauthTx.object(ENCLAVE_ID),
+                    bioauthTx.object('0x6'),
                 ],
                 typeArguments: [
-                    '0x2::sui::SUI',
+                    `${ENCLAVE_PACKAGE_ID}::core::XWALLET`,
                 ]
             })
 
-            // Execute transaction
-            signAndExecute(
-                { transaction: tx },
-                {
-                    onSuccess: (result) => {
-                        console.log('Transfer successful!', result)
-                        setTransferState('success')
-
-                        // Dispatch event to refresh balance
-                        window.dispatchEvent(new Event('ram-balance-updated'))
-                    },
-                    onError: (error) => {
-                        console.error('Transfer failed:', error)
-                        setTransferState('form')
-
-                        const errorMsg = error.message || String(error)
-                        if (errorMsg.includes('InsufficientBalance')) {
-                            showToast('Insufficient balance')
-                        } else if (errorMsg.includes('WalletLocked')) {
-                            showToast('Wallet is locked')
-                        } else if (errorMsg.includes('InvalidSignature')) {
-                            showToast('Invalid enclave signature. Please try again.')
-                        } else {
-                            showToast('Transfer failed. Please try again.')
-                        }
+            // Execute TX1 and wait for it to complete
+            await new Promise<void>((resolve, reject) => {
+                signAndExecute(
+                    { transaction: bioauthTx },
+                    {
+                        onSuccess: () => resolve(),
+                        onError: (error) => reject(error),
                     }
+                )
+            })
+
+            // Small delay for blockchain to process
+            await new Promise(r => setTimeout(r, 1000))
+
+            // === TX2: transfer_with_signature ===
+            const transferTx = new Transaction()
+
+            const transferSigHex = transferSig.signature
+            const transferSigBytes: number[] = []
+            for (let i = 0; i < transferSigHex.length; i += 2) {
+                transferSigBytes.push(parseInt(transferSigHex.substring(i, i + 2), 16))
+            }
+
+            const coinTypeBytes = Array.from(new TextEncoder().encode(coinTypeStr))
+
+            transferTx.moveCall({
+                target: `${SUI_PACKAGE_ID}::transfers::transfer_with_signature`,
+                arguments: [
+                    transferTx.object(fromWalletId!),
+                    transferTx.object(recipientWalletId!),
+                    transferTx.pure.u64(amountInMist),
+                    transferTx.pure('vector<u8>', coinTypeBytes),
+                    transferTx.pure.u64(transferSig.timestamp_ms),
+                    transferTx.pure('vector<u8>', transferSigBytes),
+                    transferTx.object(ENCLAVE_ID),
+                    transferTx.object('0x6'),
+                ],
+                typeArguments: [
+                    '0x2::sui::SUI',
+                    `${ENCLAVE_PACKAGE_ID}::core::XWALLET`,
+                ]
+            })
+
+            // Execute TX2 — may fail if wallet was just locked
+            try {
+                await new Promise<void>((resolve, reject) => {
+                    signAndExecute(
+                        { transaction: transferTx },
+                        {
+                            onSuccess: (result) => {
+                                setTransferState('success')
+                                window.dispatchEvent(new Event('ram-balance-updated'))
+                                resolve()
+                            },
+                            onError: (error) => reject(error),
+                        }
+                    )
+                })
+            } catch (txError) {
+                setTransferState('form')
+                const errorMsg = txError instanceof Error ? txError.message : String(txError)
+                if (errorMsg.includes('InsufficientBalance')) {
+                    showToast('Insufficient balance')
+                } else if (errorMsg.includes('WalletLocked') || errorMsg.includes('assert_wallet_unlocked')) {
+                    showToast('Wallet is locked. Please try again later.')
+                } else if (errorMsg.includes('InvalidSignature')) {
+                    showToast('Invalid enclave signature. Please try again.')
+                } else {
+                    showToast('Transfer failed. Please try again.')
                 }
-            )
+            }
         } catch (error) {
             setTransferState('form')
-            showToast(error instanceof Error ? error.message : 'Transfer failed')
+            const errorMsg = error instanceof Error ? error.message : String(error)
+            if (errorMsg.includes('WalletLocked') || errorMsg.includes('assert_wallet_unlocked')) {
+                showToast('Wallet is locked. Please try again later.')
+            } else {
+                showToast(error instanceof Error ? error.message : 'Transfer failed')
+            }
         }
     }
-
     // Helper function to query wallet ID directly and return it
     const queryWalletDirect = async (address: string): Promise<string | null> => {
         try {
@@ -451,7 +525,6 @@ export function TransferPanel() {
             }
             return null
         } catch (error) {
-            console.error('Failed to query wallet:', error)
             return null
         }
     }
@@ -460,10 +533,8 @@ export function TransferPanel() {
         setTransferState('form')
     }
 
-    const handleDuress = (response: BioAuthResponse) => {
-        setLastResponse(response)
-        setTransferState('locked')
-    }
+    // handleDuress removed - frontend is intentionally blind to duress
+    // Smart contract handles wallet locking on-chain
 
     const handleNewTransfer = () => {
         setHandleName('')
@@ -497,33 +568,8 @@ export function TransferPanel() {
         )
     }
 
-    // Locked modal
-    if (transferState === 'locked') {
-        return (
-            <div className="transfer-panel result-panel locked-panel">
-                <div className="locked-result">
-                    <div className="result-icon locked-icon-large">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <rect x="3" y="11" width="18" height="11" rx="2" />
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        </svg>
-                    </div>
-                    <h3 className="result-title locked-title">Wallet Locked</h3>
-                    <p className="locked-message">
-                        Your wallet has been locked for 24 hours as a safety measure.
-                    </p>
-                    <p className="locked-submessage">
-                        We detected signs of stress or coercion in your voice.
-                        If you're in danger, please seek help.
-                    </p>
-                    <div className="emergency-contacts">
-                        <p className="emergency-label">Emergency Resources:</p>
-                        <a href="tel:911" className="emergency-link">Emergency: 911</a>
-                    </div>
-                </div>
-            </div>
-        )
-    }
+    // NOTE: No locked/duress UI - frontend is intentionally blind to duress detection
+    // The signed payload is submitted to blockchain where smart contract handles locking
 
     return (
         <>
@@ -638,7 +684,6 @@ export function TransferPanel() {
                     recipientAddress={walletAddress || undefined}
                     onSuccess={handleVoiceAuthSuccess}
                     onCancel={handleVoiceAuthCancel}
-                    onDuress={handleDuress}
                 />
             )}
         </>

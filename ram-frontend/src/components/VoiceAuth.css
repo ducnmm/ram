@@ -17,6 +17,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -49,6 +50,7 @@
     transform: translateY(20px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -59,7 +61,7 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-secondary, rgba(0, 0, 0, 0.06));
   border: none;
   width: 40px;
   height: 40px;
@@ -68,13 +70,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   transition: all 0.2s;
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+  background: var(--bg-tertiary, rgba(0, 0, 0, 0.1));
+  color: var(--text-primary);
 }
 
 .voice-auth-content {
@@ -159,10 +161,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.05);
     opacity: 0.9;
@@ -170,10 +175,13 @@
 }
 
 @keyframes pulseRing {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.3;
   }
+
   50% {
     transform: scale(1.2);
     opacity: 0;
@@ -218,7 +226,7 @@
 }
 
 .processing-spinner p {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
   font-size: 16px;
   margin: 0;
 }
@@ -248,6 +256,7 @@
   from {
     transform: scale(0);
   }
+
   to {
     transform: scale(1);
   }
@@ -266,14 +275,14 @@
 }
 
 .transcript {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   font-size: 16px;
   font-style: italic;
   margin: 0;
 }
 
 .stress-info {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
   font-size: 14px;
   margin: 0;
 }
@@ -299,9 +308,19 @@
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  75% {
+    transform: translateX(5px);
+  }
 }
 
 .duress-icon svg {
@@ -317,7 +336,7 @@
 }
 
 .duress-subtext {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   font-size: 16px;
   margin: 0;
   line-height: 1.5;
@@ -344,7 +363,7 @@
 }
 
 .error-text {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-primary);
   font-size: 16px;
   margin: 0;
   line-height: 1.5;

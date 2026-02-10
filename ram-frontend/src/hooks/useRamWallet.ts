@@ -6,6 +6,7 @@ export interface WalletInfo {
     id: string
     handle: string
     balance: bigint
+    lockedUntil: number
 }
 
 export function useRamWallet() {
@@ -99,19 +100,20 @@ export function useRamWallet() {
                         }
                     }
                 } catch (error) {
-                    console.error('Failed to query balance:', error)
                 }
+
+                const lockedUntil = Number(walletContent.fields.locked_until_ms || 0)
 
                 setWalletInfo({
                     id: walletId,
                     handle: walletContent.fields.handle || '',
-                    balance: balance
+                    balance: balance,
+                    lockedUntil: lockedUntil,
                 })
             } else {
                 setWalletInfo(null)
             }
         } catch (error) {
-            console.error('Failed to query wallet:', error)
             setWalletInfo(null)
         } finally {
             setLoading(false)
@@ -154,11 +156,14 @@ export function useRamWallet() {
             ? `@${account.address.slice(0, 6)}...${account.address.slice(-4)}`
             : ''
 
+    const isLocked = walletInfo ? walletInfo.lockedUntil > Date.now() : false
+
     return {
         walletInfo,
         loading,
         suinsName,
         displayName,
+        isLocked,
         refetch,
     }
 }

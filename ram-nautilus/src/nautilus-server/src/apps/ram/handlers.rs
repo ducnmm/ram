@@ -149,65 +149,51 @@ pub async fn process_bio_auth(
         .map_err(|e| EnclaveError::GenericError(format!("Failed to get timestamp: {}", e)))?
         .as_millis() as u64;
 
-    // ========================================================================
-    // COMMENTED OUT: Real audio analysis with stress detection
-    // ========================================================================
-    // let openrouter_key = if state.openrouter_api_key.is_empty() { 
-    //     None 
-    // } else { 
-    //     Some(state.openrouter_api_key.as_str()) 
-    // };
-    // 
-    // let hume_key = if state.hume_api_key.is_empty() {
-    //     None
-    // } else {
-    //     Some(state.hume_api_key.as_str())
-    // };
-    // 
-    // let analysis = audio::analyze_audio(
-    //     &req.audio_base64,
-    //     openrouter_key,
-    //     hume_key,
-    //     Some(expected_human),
-    //     coin_type,
-    // ).await?;
-    // 
-    // // Extract analysis results
-    // let transcript = analysis.transcript;
-    // let stress_level = analysis.stress_level;
-    // let amount_verified = analysis.amount_verified;
-    // 
-    // // Determine result based on analysis
-    // let result = if audio::is_under_duress(stress_level) {
-    //     // DURESS DETECTED - This will lock the wallet for 24 hours!
-    //     info!(
-    //         "RAM BioAuth: ⚠️ DURESS DETECTED for '{}' (stress_level={})",
-    //         req.handle, stress_level
-    //     );
-    //     BioAuthResult::Duress
-    // } else if amount_verified {
-    //     info!("RAM BioAuth: ✓ OK (amount verified)");
-    //     BioAuthResult::Ok
-    // } else {
-    //     // Amount doesn't match or couldn't be parsed
-    //     info!(
-    //         "RAM BioAuth: ✗ INVALID AMOUNT (expected={:.4} {}, detected={:?})",
-    //         expected_human, coin_type, analysis.amount
-    //     );
-    //     BioAuthResult::InvalidAmount
-    // };
+    // Real audio analysis with stress detection
+    let openrouter_key = if state.openrouter_api_key.is_empty() { 
+        None 
+    } else { 
+        Some(state.openrouter_api_key.as_str()) 
+    };
 
-    // ========================================================================
-    // MOCK: Always return success with 0.001 transfer
-    // ========================================================================
-    let transcript = format!("I confirm sending 0.001 {}", coin_type);
-    let stress_level = 0u8;  // No stress
-    let result = BioAuthResult::Ok;  // Always success
-    
-    info!(
-        "RAM BioAuth [MOCK]: ✓ Always returning SUCCESS for handle='{}', amount=0.001 {}",
-        req.handle, coin_type
-    );
+    let hume_key = if state.hume_api_key.is_empty() {
+        None
+    } else {
+        Some(state.hume_api_key.as_str())
+    };
+
+    let analysis = audio::analyze_audio(
+        &req.audio_base64,
+        openrouter_key,
+        hume_key,
+        Some(expected_human),
+        coin_type,
+    ).await?;
+
+    // Extract analysis results
+    let transcript = analysis.transcript;
+    let stress_level = analysis.stress_level;
+    let amount_verified = analysis.amount_verified;
+
+    // Determine result based on analysis
+    let result = if audio::is_under_duress(stress_level) {
+        // DURESS DETECTED - This will lock the wallet for 24 hours!
+        info!(
+            "RAM BioAuth: ⚠️ DURESS DETECTED for '{}' (stress_level={})",
+            req.handle, stress_level
+        );
+        BioAuthResult::Duress
+    } else if amount_verified {
+        info!("RAM BioAuth: ✓ OK (amount verified)");
+        BioAuthResult::Ok
+    } else {
+        // Amount doesn't match or couldn't be parsed
+        info!(
+            "RAM BioAuth: ✗ INVALID AMOUNT (expected={:.4} {}, detected={:?})",
+            expected_human, coin_type, analysis.amount
+        );
+        BioAuthResult::InvalidAmount
+    };
 
     // Build payload for Move contract
     let payload = BioAuthPayload {

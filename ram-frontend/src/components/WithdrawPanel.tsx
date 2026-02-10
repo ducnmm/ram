@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
-import { SUI_PACKAGE_ID, RAM_REGISTRY_ID, ENCLAVE_ID, requestWithdrawSignature } from '../services/ramApi'
+import { SUI_PACKAGE_ID, RAM_REGISTRY_ID, ENCLAVE_ID, ENCLAVE_PACKAGE_ID, requestWithdrawSignature } from '../services/ramApi'
 import type { BioAuthResponse } from '../services/ramApi'
 import { useRamWallet } from '../hooks/useRamWallet'
 import './WithdrawPanel.css'
@@ -12,7 +12,7 @@ type Toast = {
     visible: boolean;
 };
 
-type WithdrawState = 'form' | 'voice-auth' | 'success' | 'locked';
+type WithdrawState = 'form' | 'voice-auth' | 'success';
 
 export function WithdrawPanel() {
     const account = useCurrentAccount()
@@ -75,7 +75,6 @@ export function WithdrawPanel() {
             }
             setWalletId(null)
         } catch (error) {
-            console.error('Failed to query wallet:', error)
             setWalletId(null)
         }
     }
@@ -121,91 +120,132 @@ export function WithdrawPanel() {
 
         // Validate wallet ID
         if (!walletId || typeof walletId !== 'string' || !walletId.startsWith('0x')) {
-            console.error('Invalid walletId:', walletId)
             showToast('Your wallet ID is invalid. Please refresh and try again.')
             setWithdrawState('form')
             return
         }
 
-        console.log('Withdraw from:', walletId)
 
         try {
             const amountInMist = Math.floor(parseFloat(amount) * 1_000_000_000)
             const coinTypeStr = '0000000000000000000000000000000000000000000000000000000000000002::sui::SUI'
 
             // Step 1: Get enclave signature for the withdrawal
-            console.log('Requesting withdraw signature from enclave...')
             const withdrawSig = await requestWithdrawSignature(
                 currentUserHandle,
                 amountInMist,
                 coinTypeStr,
             )
-            console.log('Withdraw signature received:', withdrawSig)
 
-            // Step 2: Create transaction with signed withdraw
-            const tx = new Transaction()
+            // === TX1: apply_bioauth (always executes on-chain) ===
+            const bioauthTx = new Transaction()
 
-            // Convert signature hex string to number array
-            const sigHex = withdrawSig.signature
-            const sigBytes: number[] = []
-            for (let i = 0; i < sigHex.length; i += 2) {
-                sigBytes.push(parseInt(sigHex.substring(i, i + 2), 16))
+            // Convert BioAuth signature hex to bytes
+            const bioSigHex = response.signature
+            const bioSigBytes: number[] = []
+            for (let i = 0; i < bioSigHex.length; i += 2) {
+                bioSigBytes.push(parseInt(bioSigHex.substring(i, i + 2), 16))
+            }
+
+            bioauthTx.moveCall({
+                target: `${SUI_PACKAGE_ID}::bioguard::apply_bioauth`,
+                arguments: [
+                    bioauthTx.object(walletId),
+                    bioauthTx.pure('vector<u8>', response.payload.handle),
+                    bioauthTx.pure.u64(response.payload.amount),
+                    bioauthTx.pure.u8(response.payload.result),
+                    bioauthTx.pure('vector<u8>', response.payload.transcript),
+                    bioauthTx.pure.u64(response.timestamp_ms),
+                    bioauthTx.pure('vector<u8>', bioSigBytes),
+                    bioauthTx.object(ENCLAVE_ID),
+                    bioauthTx.object('0x6'),
+                ],
+                typeArguments: [
+                    `${ENCLAVE_PACKAGE_ID}::core::XWALLET`,
+                ]
+            })
+
+            // Execute TX1 and wait for it to complete
+            await new Promise<void>((resolve, reject) => {
+                signAndExecute(
+                    { transaction: bioauthTx },
+                    {
+                        onSuccess: () => resolve(),
+                        onError: (error) => reject(error),
+                    }
+                )
+            })
+
+            // Small delay for blockchain to process
+            await new Promise(r => setTimeout(r, 1000))
+
+            // === TX2: withdraw ===
+            const withdrawTx = new Transaction()
+
+            const withdrawSigHex = withdrawSig.signature
+            const withdrawSigBytes: number[] = []
+            for (let i = 0; i < withdrawSigHex.length; i += 2) {
+                withdrawSigBytes.push(parseInt(withdrawSigHex.substring(i, i + 2), 16))
             }
 
             const coinTypeBytes = Array.from(new TextEncoder().encode(coinTypeStr))
 
-            // Call withdraw function with enclave signature
-            const [coin] = tx.moveCall({
+            const [coin] = withdrawTx.moveCall({
                 target: `${SUI_PACKAGE_ID}::wallet::withdraw`,
                 arguments: [
-                    tx.object(walletId),
-                    tx.pure.u64(amountInMist),
-                    tx.pure('vector<u8>', coinTypeBytes),
-                    tx.pure.u64(withdrawSig.timestamp_ms),
-                    tx.pure('vector<u8>', sigBytes),
-                    tx.object(ENCLAVE_ID),
-                    tx.object('0x6'), // Clock object
+                    withdrawTx.object(walletId),
+                    withdrawTx.pure.u64(amountInMist),
+                    withdrawTx.pure('vector<u8>', coinTypeBytes),
+                    withdrawTx.pure.u64(withdrawSig.timestamp_ms),
+                    withdrawTx.pure('vector<u8>', withdrawSigBytes),
+                    withdrawTx.object(ENCLAVE_ID),
+                    withdrawTx.object('0x6'),
                 ],
                 typeArguments: [
                     '0x2::sui::SUI',
-                    `${SUI_PACKAGE_ID}::core::RAM`,
+                    `${ENCLAVE_PACKAGE_ID}::core::XWALLET`,
                 ]
             })
 
             // Transfer the withdrawn coin to sender
-            tx.transferObjects([coin], account!.address)
+            withdrawTx.transferObjects([coin], account!.address)
 
-            // Execute transaction
-            signAndExecute(
-                { transaction: tx },
-                {
-                    onSuccess: (result) => {
-                        console.log('Withdraw successful!', result)
-                        setWithdrawState('success')
-
-                        // Dispatch event to refresh balance in HomePage
-                        window.dispatchEvent(new Event('ram-balance-updated'))
-                    },
-                    onError: (error) => {
-                        console.error('Withdraw failed:', error)
-                        setWithdrawState('form')
-
-                        const errorMsg = error.message || String(error)
-                        if (errorMsg.includes('InsufficientBalance') || errorMsg.includes('insufficient')) {
-                            showToast('Insufficient balance in RAM wallet')
-                        } else if (errorMsg.includes('WalletLocked')) {
-                            showToast('Wallet is locked')
-                        } else if (errorMsg.includes('InvalidSignature')) {
-                            showToast('Invalid enclave signature. Please try again.')
-                        } else {
-                            showToast('Withdraw failed. Please try again.')
+            // Execute TX2 — may fail if wallet was just locked
+            try {
+                await new Promise<void>((resolve, reject) => {
+                    signAndExecute(
+                        { transaction: withdrawTx },
+                        {
+                            onSuccess: (result) => {
+                                setWithdrawState('success')
+                                window.dispatchEvent(new Event('ram-balance-updated'))
+                                resolve()
+                            },
+                            onError: (error) => reject(error),
                         }
-                    }
+                    )
+                })
+            } catch (txError) {
+                setWithdrawState('form')
+                const errorMsg = txError instanceof Error ? txError.message : String(txError)
+                if (errorMsg.includes('InsufficientBalance') || errorMsg.includes('insufficient')) {
+                    showToast('Insufficient balance in RAM wallet')
+                } else if (errorMsg.includes('WalletLocked') || errorMsg.includes('assert_wallet_unlocked')) {
+                    showToast('Wallet is locked. Please try again later.')
+                } else if (errorMsg.includes('InvalidSignature')) {
+                    showToast('Invalid enclave signature. Please try again.')
+                } else {
+                    showToast('Withdraw failed. Please try again.')
                 }
-            )
+            }
         } catch (error) {
             setWithdrawState('form')
-            showToast(error instanceof Error ? error.message : 'Withdraw failed. Please try again.')
+            const errorMsg = error instanceof Error ? error.message : String(error)
+            if (errorMsg.includes('WalletLocked') || errorMsg.includes('assert_wallet_unlocked')) {
+                showToast('Wallet is locked. Please try again later.')
+            } else {
+                showToast(error instanceof Error ? error.message : 'Withdraw failed. Please try again.')
+            }
         }
     }
 
@@ -213,10 +253,8 @@ export function WithdrawPanel() {
         setWithdrawState('form')
     }
 
-    const handleDuress = (response: BioAuthResponse) => {
-        setLastResponse(response)
-        setWithdrawState('locked')
-    }
+    // handleDuress removed - frontend is intentionally blind to duress
+    // Smart contract handles wallet locking on-chain
 
     const handleNewWithdraw = () => {
         setAmount('')
@@ -234,32 +272,12 @@ export function WithdrawPanel() {
                 action="withdraw"
                 onSuccess={handleVoiceAuthSuccess}
                 onCancel={handleVoiceAuthCancel}
-                onDuress={handleDuress}
             />
         )
     }
 
-    // Locked state (duress detected)
-    if (withdrawState === 'locked') {
-        return (
-            <div className="withdraw-panel result-panel">
-                <div className="locked-result">
-                    <div className="result-icon locked-icon-large">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <rect x="5" y="11" width="14" height="10" rx="2" />
-                            <path d="M7 11V7a5 5 0 0110 0v4" />
-                        </svg>
-                    </div>
-                    <h3 className="result-title">Wallet Locked</h3>
-                    <p className="result-message">Duress detected in voice authentication</p>
-                    <p className="lock-duration">🔒 Locked for 24 hours</p>
-                    <button className="new-withdraw-btn" onClick={handleNewWithdraw}>
-                        Try Again
-                    </button>
-                </div>
-            </div>
-        )
-    }
+    // NOTE: No locked/duress UI - frontend is intentionally blind to duress detection
+    // The signed payload is submitted to blockchain where smart contract handles locking
 
     // Success state
     if (withdrawState === 'success') {

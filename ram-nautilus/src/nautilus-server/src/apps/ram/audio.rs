@@ -16,9 +16,11 @@ use crate::EnclaveError;
 use serde::{Deserialize, Serialize};
 use tracing::{error, info, warn};
 
+use super::voice_stress;
+
 /// Stress threshold - above this is considered duress
-/// When stress >= 70, wallet will be locked for 24 hours
-const STRESS_THRESHOLD: u8 = 70;
+/// When stress >= 60, wallet will be locked for 24 hours
+const STRESS_THRESHOLD: u8 = 60;
 
 /// OpenRouter API URL for GPT-4o Audio
 const OPENROUTER_API_URL: &str = "https://openrouter.ai/api/v1/chat/completions";
@@ -86,6 +88,14 @@ struct OpenRouterRequest {
     modalities: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     audio: Option<AudioConfig>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    response_format: Option<ResponseFormat>,
+}
+
+/// Force structured JSON output
+#[derive(Serialize)]
+struct ResponseFormat {
+    r#type: String,
 }
 
 #[derive(Serialize)]
@@ -151,19 +161,27 @@ Your job is to analyze the user's voice recording to:
 {}
 
 STRESS DETECTION CRITERIA (0-100 scale):
-- 0-30: Normal, calm voice
-- 31-50: Slightly nervous but acceptable
-- 51-69: Elevated stress, concerning but not dangerous
-- 70-100: DURESS DETECTED - user is likely being coerced/threatened
+- 0-20: Completely calm, relaxed, confident voice
+- 21-40: Normal speaking voice with minor natural nervousness
+- 41-60: Noticeable stress - voice tension, slight trembling, speaking faster than normal
+- 61-79: High stress - clear vocal distress, shaking voice, fear detectable
+- 80-100: EXTREME DURESS - crying, sobbing, screaming, whispering in fear, clearly coerced
 
-Voice indicators of duress:
-- High or unstable pitch (trembling voice)
-- Fast, irregular, or choppy speech patterns
-- Unnaturally slow/deliberate speech (as if reading hostage script)
-- Voice breaking, crying, or sobbing
-- Whispered or hushed tone (trying to hide conversation)
-- Background sounds: threats, other voices commanding, distress sounds
-- Distress keywords in ANY language: "help", "please", "forced", "gun", "kidnap", "giúp", "cứu", "bắt ép"
+VOCAL INDICATORS TO ANALYZE (pay close attention to these):
+- **Pitch**: Is the voice higher than normal? Unstable or wavering pitch?
+- **Tremor**: Does the voice shake or tremble?
+- **Speech rate**: Is speaking unusually fast (panic) or unnaturally slow/robotic (reading a script under threat)?
+- **Breathing**: Heavy, irregular, or panicked breathing?
+- **Vocal quality**: Voice breaking, cracking, crying, sobbing?
+- **Volume**: Whispering (hiding), or shouting (panic/anger)?
+- **Emotional tone**: Does the speaker sound scared, anxious, angry, or distressed?
+- **Background**: Other voices (threats, commands), sounds of struggle?
+- **Content keywords** in ANY language: "help", "please", "forced", "gun", "kidnap", "hurry", "giúp", "cứu", "bắt ép", "sợ", "đe dọa"
+
+IMPORTANT: This is a SECURITY feature. A person under duress (robbery, kidnapping) may TRY to sound calm but still show subtle vocal stress. Pay attention to:
+- Micro-tremors in the voice even if they try to sound steady
+- Unnatural control (trying too hard to sound calm)
+- Any emotional leakage (brief moments of fear breaking through)
 
 AMOUNT EXTRACTION:
 - Listen for numbers followed by currency: "5 SUI", "10.5 USDC", "một trăm SUI"
@@ -177,11 +195,11 @@ Return ONLY valid JSON with these exact fields:
   "amount": <number or null if no amount mentioned>
 }}
 
-Be CONSERVATIVE with stress detection. False positives lock the user's wallet for 24 hours.
-Only mark stress >= 70 when there are CLEAR signs of duress."#, expected_info);
+Do NOT default to low stress scores. Analyze the actual vocal characteristics carefully.
+If there is ANY detectable stress or fear in the voice, reflect it in the score."#, expected_info);
 
     let request = OpenRouterRequest {
-        model: "openai/gpt-audio-mini".to_string(),
+        model: "openai/gpt-4o-audio-preview".to_string(),
         messages: vec![ChatMessage {
             role: "user".to_string(),
             content: vec![
@@ -194,9 +212,10 @@ Only mark stress >= 70 when there are CLEAR signs of duress."#, expected_info);
                 },
             ],
         }],
-        temperature: Some(0.1), // Low temperature for consistent analysis
+        temperature: Some(0.0), // Zero temperature for maximum consistency
         modalities: Some(vec!["text".to_string()]), // Only text output, no audio
         audio: None, // No audio output needed
+        response_format: None, // gpt-4o-audio-preview doesn't support json_object
     };
 
     // Make the API call
@@ -241,8 +260,19 @@ Only mark stress >= 70 when there are CLEAR signs of duress."#, expected_info);
         amount: Option<f64>,
     }
     
+    // Try direct parse first, then extract JSON from mixed text as fallback
     let gpt_result: GptResponse = serde_json::from_str(&content)
-        .map_err(|e| EnclaveError::GenericError(format!("Failed to parse GPT-4o JSON: {} - Content: {}", e, content)))?;
+        .or_else(|_| {
+            warn!("GPT-4o returned non-pure JSON, attempting extraction...");
+            let json_str = extract_json_from_text(&content)
+                .ok_or_else(|| EnclaveError::GenericError(
+                    format!("No valid JSON found in GPT-4o response: {}", content)
+                ))?;
+            serde_json::from_str(&json_str)
+                .map_err(|e| EnclaveError::GenericError(
+                    format!("Failed to parse extracted JSON: {} - Content: {}", e, json_str)
+                ))
+        })?;
     
     // Verify amount if expected
     let amount_verified = match (expected_amount, gpt_result.amount) {
@@ -433,29 +463,57 @@ pub async fn analyze_audio(
     expected_amount: Option<f64>,
     coin_type: &str,
 ) -> Result<AudioAnalysisResult, EnclaveError> {
-    // Try GPT-4o first if API key is available
+    // === Step 1: DSP-based voice stress analysis (always runs) ===
+    // Analyze the raw WAV audio for acoustic stress indicators
+    let dsp_stress = {
+        use base64::{Engine as _, engine::general_purpose::STANDARD};
+        match STANDARD.decode(audio_base64) {
+            Ok(wav_bytes) => {
+                let analysis = voice_stress::analyze_voice_stress(&wav_bytes);
+                info!("RAM: DSP stress analysis: level={}, reasons={:?}", 
+                    analysis.stress_level, analysis.reasons);
+                analysis.stress_level
+            },
+            Err(e) => {
+                warn!("RAM: Failed to decode audio for DSP analysis: {}", e);
+                0u8
+            }
+        }
+    };
+
+    // === Step 2: GPT-4o content analysis (if API key available) ===
     if let Some(api_key) = openrouter_api_key {
         if !api_key.is_empty() {
             match analyze_audio_gpt4o(audio_base64, api_key, expected_amount, coin_type).await {
                 Ok(mut result) => {
+                    let gpt_stress = result.stress_level;
+                    
+                    // Combine: use MAX of DSP and GPT-4o stress
+                    // If EITHER method detects stress, we should flag it
+                    let combined_stress = gpt_stress.max(dsp_stress);
+                    
+                    info!("RAM: Combining stress: GPT4o={}, DSP={}, Combined={} (using max)", 
+                        gpt_stress, dsp_stress, combined_stress);
+                    
+                    result.stress_level = combined_stress;
+
                     // Optionally enhance with Hume AI for stress detection
                     if let Some(hume_key) = hume_api_key {
                         if !hume_key.is_empty() {
                             match analyze_audio_hume(audio_base64, hume_key).await {
                                 Ok(emotions) => {
-                                    // Use Hume's emotion analysis for more accurate stress
                                     let hume_stress = calculate_stress_from_emotions(&emotions);
-                                    // Average GPT-4o and Hume stress levels for robustness
-                                    let combined_stress = ((result.stress_level as u16 + hume_stress as u16) / 2) as u8;
+                                    // Take max of all three
+                                    let final_stress = result.stress_level.max(hume_stress);
                                     
-                                    info!("Combining stress: GPT4o={}, Hume={}, Combined={}", 
-                                        result.stress_level, hume_stress, combined_stress);
+                                    info!("RAM: Adding Hume: hume={}, final={}", 
+                                        hume_stress, final_stress);
                                     
-                                    result.stress_level = combined_stress;
+                                    result.stress_level = final_stress;
                                     result.emotions = Some(emotions);
                                 },
                                 Err(e) => {
-                                    warn!("Hume API failed, using GPT-4o stress only: {}", e);
+                                    warn!("Hume API failed, using GPT4o+DSP stress: {}", e);
                                 }
                             }
                         }
@@ -464,15 +522,21 @@ pub async fn analyze_audio(
                 },
                 Err(e) => {
                     error!("GPT-4o analysis failed: {}", e);
-                    // Fall through to mock
+                    // Fall through to mock, but still use DSP stress
                 }
             }
         }
     }
     
-    // Fallback to mock implementation
-    warn!("Using mock audio analysis (no API keys configured)");
-    analyze_audio_mock(audio_base64, expected_amount, coin_type)
+    // Fallback to mock implementation but use DSP stress score
+    warn!("Using mock audio analysis (GPT-4o unavailable or failed)");
+    let mut mock_result = analyze_audio_mock(audio_base64, expected_amount, coin_type)?;
+    // Override mock stress with DSP stress if higher
+    if dsp_stress > mock_result.stress_level {
+        info!("RAM: Overriding mock stress {} with DSP stress {}", mock_result.stress_level, dsp_stress);
+        mock_result.stress_level = dsp_stress;
+    }
+    Ok(mock_result)
 }
 
 // ============================================================================
@@ -596,6 +660,44 @@ pub fn analyze_stress_mock(audio_base64: &str, transcript: &str) -> Result<u8, E
     warn!("RAM: Using MOCK stress analysis (no OPENROUTER_API_KEY)");
     
     Ok(analyze_stress_from_transcript(transcript, audio_bytes.len()))
+}
+
+// ============================================================================
+// JSON EXTRACTION UTILITY
+// ============================================================================
+
+/// Extract the first valid JSON object from text that may contain extra content.
+/// GPT-4o sometimes returns JSON wrapped in markdown or with explanation text.
+fn extract_json_from_text(text: &str) -> Option<String> {
+    // Strip markdown code fences if present
+    let stripped = text.trim();
+    let stripped = if stripped.starts_with("```json") {
+        stripped.trim_start_matches("```json").trim_end_matches("```").trim()
+    } else if stripped.starts_with("```") {
+        stripped.trim_start_matches("```").trim_end_matches("```").trim()
+    } else {
+        stripped
+    };
+
+    // Find first '{' and its matching '}'
+    let start = stripped.find('{')?;
+    let mut depth = 0i32;
+    let mut end = None;
+    for (i, ch) in stripped[start..].char_indices() {
+        match ch {
+            '{' => depth += 1,
+            '}' => {
+                depth -= 1;
+                if depth == 0 {
+                    end = Some(start + i + 1);
+                    break;
+                }
+            }
+            _ => {}
+        }
+    }
+    
+    end.map(|e| stripped[start..e].to_string())
 }
 
 // ============================================================================

@@ -15,6 +15,7 @@
 mod audio;
 mod handlers;
 mod types;
+mod voice_stress;
 
 // Re-export types
 pub use types::{

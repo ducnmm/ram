@@ -29,7 +29,6 @@ export function HistoryPage() {
             const data = await getWalletEvents({ handle, limit: 50 })
             setEvents(data)
         } catch (error) {
-            console.error('Failed to load events:', error)
         } finally {
             setLoading(false)
         }

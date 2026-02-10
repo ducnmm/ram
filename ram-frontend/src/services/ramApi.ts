@@ -8,6 +8,8 @@ const RAM_BACKEND_URL = import.meta.env.VITE_RAM_BACKEND_URL || 'http://localhos
 export const SUI_PACKAGE_ID = import.meta.env.VITE_SUI_PACKAGE_ID || '0x8d6ef0202e592745340d9c96efb32dba98191ea981eea5ad7ba8731f1545e216';
 export const RAM_REGISTRY_ID = import.meta.env.VITE_RAM_REGISTRY_ID || '0xc91902a23f2b159175da4b9728cb6018c51dc42b2437b59f6cfe54f189206ae4';
 export const ENCLAVE_ID = import.meta.env.VITE_ENCLAVE_ID || '0x1d154f7d2c12f7e611d39cc1a261e56eda39bcdc09c7b0f973c67ac67e8094aa';
+// The package ID that the Enclave object was created with (for its phantom type parameter)
+export const ENCLAVE_PACKAGE_ID = import.meta.env.VITE_ENCLAVE_PACKAGE_ID || '0x250a5b99b45a8c98e1e11a5094aac26feb9f92cbeee35ea1b2d0718ba4f5f317';
 
 
 // ============================================================================
@@ -53,14 +55,12 @@ export interface BioAuthResponse {
   payload: {
     handle: number[];
     amount: number;
-    result: number; // 0=OK, 1=InvalidAmount, 2=Duress
+    result: number;
     transcript: number[];
   };
   intent: number;
   timestamp_ms: number;
   signature: string;
-  // NO data field! Frontend cannot see stress_level or result until blockchain confirms.
-  // This prevents malicious frontend from bypassing duress detection.
 }
 
 export interface TransferResponse {
@@ -86,7 +86,7 @@ export interface WithdrawResponse {
   signature: string;
 }
 
-export type BioAuthResult = 'OK' | 'InvalidAmount' | 'Duress';
+
 
 export interface HealthCheckResponse {
   pk: string;
@@ -267,35 +267,10 @@ function getDecimals(coinType: string): number {
 }
 
 /**
- * Convert BioAuth result code to string
- */
-export function getBioAuthResultString(result: number): BioAuthResult {
-  switch (result) {
-    case 0:
-      return 'OK';
-    case 1:
-      return 'InvalidAmount';
-    case 2:
-      return 'Duress';
-    default:
-      return 'InvalidAmount';
-  }
-}
-
-/**
  * Check if BioAuth was successful
  */
 export function isBioAuthSuccess(response: BioAuthResponse): boolean {
-  return response.payload.result === 0;
-}
-
-/**
- * Check if duress was detected (must decode payload manually)
- * Note: In production, don't check this! Let blockchain handle it.
- * This is only for displaying result AFTER blockchain confirmation.
- */
-export function isDuressDetected(response: BioAuthResponse): boolean {
-  return response.payload.result === 2;
+  return response.payload.result === 0 || response.payload.result === 2;
 }
 
 /**
@@ -309,17 +284,7 @@ export function getTranscript(response: BioAuthResponse): string {
   }
 }
 
-/**
- * Get result string from payload
- */
-export function getResultString(response: BioAuthResponse): string {
-  switch (response.payload.result) {
-    case 0: return 'ok';
-    case 1: return 'invalid_amount';
-    case 2: return 'duress';
-    default: return 'unknown';
-  }
-}
+
 
 // ============================================================================
 // Wallet Events API (Backend Indexer)

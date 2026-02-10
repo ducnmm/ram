@@ -27,20 +27,28 @@ export function HomePage() {
     const [creating, setCreating] = useState(false)
     const [toast, setToast] = useState<Toast>({ message: '', visible: false })
 
-    const { walletInfo, loading, suinsName, displayName, refetch } = useRamWallet()
+    const { walletInfo, loading, suinsName, displayName, isLocked, refetch } = useRamWallet()
 
     // Sync state from URL
     useEffect(() => {
         if (location.pathname === '/transfer') {
+            if (isLocked) {
+                navigate('/')
+                return
+            }
             setExpanded('transfers')
         } else if (location.pathname === '/deposit') {
             setExpanded('deposit')
         } else if (location.pathname === '/withdraw') {
+            if (isLocked) {
+                navigate('/')
+                return
+            }
             setExpanded('withdraw')
         } else {
             setExpanded(null)
         }
-    }, [location.pathname])
+    }, [location.pathname, isLocked])
 
 
 
@@ -77,7 +85,6 @@ export function HomePage() {
                 { transaction: tx },
                 {
                     onSuccess: (result) => {
-                        console.log('Wallet created successfully!', result)
                         setCreating(false)
                         // Wait a bit for blockchain to process, then refresh
                         setTimeout(() => {
@@ -85,7 +92,6 @@ export function HomePage() {
                         }, 3000)
                     },
                     onError: (error) => {
-                        console.error('Failed to create wallet:', error)
                         setCreating(false)
                         const errorMsg = error.message || String(error)
 
@@ -103,13 +109,21 @@ export function HomePage() {
                 }
             )
         } catch (error) {
-            console.error('Failed to create wallet:', error)
             showToast('Failed to create wallet. Please try again.')
             setCreating(false)
         }
     }
 
     const handleExpandCard = (card: ExpandedCard) => {
+        if ((card === 'transfers' || card === 'withdraw') && isLocked) {
+            const remainMs = walletInfo!.lockedUntil - Date.now()
+            const remainMin = Math.ceil(remainMs / 60000)
+            const remainHrs = Math.floor(remainMin / 60)
+            const remainMinOnly = remainMin % 60
+            const timeStr = remainHrs > 0 ? `${remainHrs}h ${remainMinOnly}m` : `${remainMin}m`
+            showToast(`Wallet is locked. Try again in ${timeStr}.`)
+            return
+        }
         if (card === 'transfers') {
             navigate('/transfer')
         } else if (card === 'deposit') {
@@ -141,14 +155,24 @@ export function HomePage() {
                             className="greeting-card"
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.15 }}
+                            transition={{ duration: 0.1 }}
                         >
                             <div className="greeting-content">
                                 <div className="wallet-btn-wrapper">
                                     <WalletMenu />
                                 </div>
                                 <div className="greeting-text">
-                                    <h1 className="greeting-title">Hi {displayName}</h1>
+                                    <h1 className="greeting-title">
+                                        Hi {displayName}
+                                        {isLocked && (
+                                            <span className="lock-badge" title={`Wallet locked until ${new Date(walletInfo!.lockedUntil).toLocaleTimeString()}`}>
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                                </svg>
+                                            </span>
+                                        )}
+                                    </h1>
                                     {loading ? (
                                         <p className="greeting-balance">Loading...</p>
                                     ) : walletInfo ? (
@@ -169,17 +193,25 @@ export function HomePage() {
                             className="cards-grid"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ duration: 0.15, delay: 0.05 }}
+                            transition={{ duration: 0.1, delay: 0.05 }}
                         >
                             <motion.div
-                                className="action-card action-card-transfers"
+                                className={`action-card action-card-transfers${isLocked ? ' action-card-disabled' : ''}`}
                                 onClick={() => handleExpandCard('transfers')}
-                                whileTap={{ scale: 0.98 }}
+                                whileTap={isLocked ? {} : { scale: 0.98 }}
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.15, delay: 0.1 }}
+                                transition={{ duration: 0.1, delay: 0.1 }}
                             >
-                                <span className="action-card-label">Transfers</span>
+                                <span className="action-card-label">
+                                    {isLocked && (
+                                        <svg className="card-lock-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                        </svg>
+                                    )}
+                                    Transfers
+                                </span>
                             </motion.div>
                             <div className="action-cards-right">
                                 <motion.div
@@ -188,19 +220,27 @@ export function HomePage() {
                                     whileTap={{ scale: 0.98 }}
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ duration: 0.15, delay: 0.12 }}
+                                    transition={{ duration: 0.1, delay: 0.12 }}
                                 >
                                     <span className="action-card-label">Deposit</span>
                                 </motion.div>
                                 <motion.div
-                                    className="action-card action-card-small"
+                                    className={`action-card action-card-small${isLocked ? ' action-card-disabled' : ''}`}
                                     onClick={() => handleExpandCard('withdraw')}
-                                    whileTap={{ scale: 0.98 }}
+                                    whileTap={isLocked ? {} : { scale: 0.98 }}
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ duration: 0.15, delay: 0.15 }}
+                                    transition={{ duration: 0.1, delay: 0.1 }}
                                 >
-                                    <span className="action-card-label">Withdraw</span>
+                                    <span className="action-card-label">
+                                        {isLocked && (
+                                            <svg className="card-lock-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                            </svg>
+                                        )}
+                                        Withdraw
+                                    </span>
                                 </motion.div>
                             </div>
                         </motion.div>

@@ -68,7 +68,6 @@ export function DepositPanel() {
             }
             setWalletId(null)
         } catch (error) {
-            console.error('Failed to query wallet:', error)
             setWalletId(null)
         }
     }
@@ -125,7 +124,6 @@ export function DepositPanel() {
                 { transaction: tx },
                 {
                     onSuccess: (result) => {
-                        console.log('Deposit successful!', result)
                         setDepositState('success')
                         
                         // Dispatch event to refresh balance in HomePage
@@ -138,7 +136,6 @@ export function DepositPanel() {
                         }, 3000)
                     },
                     onError: (error) => {
-                        console.error('Deposit failed:', error)
                         setDepositState('form')
                         
                         const errorMsg = error.message || String(error)

@@ -22,7 +22,7 @@ export function TransferPanel() {
     const [walletAddress, setWalletAddress] = useState('')
     const [amount, setAmount] = useState('')
     const [transferState, setTransferState] = useState<TransferState>('form')
-    const [lastResponse, setLastResponse] = useState<BioAuthResponse | null>(null)
+    const [_lastResponse, setLastResponse] = useState<BioAuthResponse | null>(null)
     const [toast, setToast] = useState<Toast>({ message: '', visible: false })
     const [fromWalletId, setFromWalletId] = useState<string | null>(null)
     const [toWalletId, setToWalletId] = useState<string | null>(null)
@@ -308,7 +308,7 @@ export function TransferPanel() {
                     signAndExecute(
                         { transaction: createTx },
                         {
-                            onSuccess: async (result) => {
+                            onSuccess: async (_result) => {
                                 resolve()
                             },
                             onError: (error) => {
@@ -460,7 +460,7 @@ export function TransferPanel() {
                     signAndExecute(
                         { transaction: transferTx },
                         {
-                            onSuccess: (result) => {
+                            onSuccess: (_result) => {
                                 setTransferState('success')
                                 window.dispatchEvent(new Event('ram-balance-updated'))
                                 resolve()
@@ -536,17 +536,6 @@ export function TransferPanel() {
     // handleDuress removed - frontend is intentionally blind to duress
     // Smart contract handles wallet locking on-chain
 
-    const handleNewTransfer = () => {
-        setHandleName('')
-        setWalletAddress('')
-        setAmount('')
-        setTransferState('form')
-        setLastResponse(null)
-        setResolvedAddress('')
-        setResolvedName('')
-        setNameError('')
-        setAddressError('')
-    }
 
     // Success modal
     if (transferState === 'success') {

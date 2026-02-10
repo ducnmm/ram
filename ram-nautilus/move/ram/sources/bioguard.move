@@ -41,15 +41,14 @@ module ram::bioguard {
         );
 
         // Verify signature from enclave
-        // COMMENTED FOR TESTING - Re-enable for production
-        // let payload = core::new_bioauth_payload(handle, amount, result, transcript);
-        // let is_valid = enclave.verify_signature(
-        //     core::bioauth_intent(),
-        //     timestamp,
-        //     payload,
-        //     signature,
-        // );
-        // assert!(is_valid, core::e_invalid_signature());
+        let payload = core::new_bioauth_payload(handle, amount, result, transcript);
+        let is_valid = enclave.verify_signature(
+            core::bioauth_intent(),
+            timestamp,
+            payload,
+            signature,
+        );
+        assert!(is_valid, core::e_invalid_signature());
 
         // Check replay
         assert!(timestamp > core::wallet_last_timestamp(wallet), core::e_replay_attempt());

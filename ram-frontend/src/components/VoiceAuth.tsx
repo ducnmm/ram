@@ -34,7 +34,7 @@ export function VoiceAuth({
 }: VoiceAuthProps) {
   const [state, setState] = useState<AuthState>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState<string | null>(null);
+  const [_transcript, setTranscript] = useState<string | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);

@@ -84,7 +84,7 @@ export function HomePage() {
             signAndExecute(
                 { transaction: tx },
                 {
-                    onSuccess: (result) => {
+                    onSuccess: (_result) => {
                         setCreating(false)
                         // Wait a bit for blockchain to process, then refresh
                         setTimeout(() => {

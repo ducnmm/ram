@@ -22,7 +22,7 @@ export function WithdrawPanel() {
     const [withdrawState, setWithdrawState] = useState<WithdrawState>('form')
     const [toast, setToast] = useState<Toast>({ message: '', visible: false })
     const [walletId, setWalletId] = useState<string | null>(null)
-    const [lastResponse, setLastResponse] = useState<BioAuthResponse | null>(null)
+    const [_lastResponse, setLastResponse] = useState<BioAuthResponse | null>(null)
 
     const { walletInfo } = useRamWallet()
     const currentUserHandle = walletInfo?.handle || ''
@@ -216,7 +216,7 @@ export function WithdrawPanel() {
                     signAndExecute(
                         { transaction: withdrawTx },
                         {
-                            onSuccess: (result) => {
+                            onSuccess: (_result) => {
                                 setWithdrawState('success')
                                 window.dispatchEvent(new Event('ram-balance-updated'))
                                 resolve()
@@ -256,11 +256,6 @@ export function WithdrawPanel() {
     // handleDuress removed - frontend is intentionally blind to duress
     // Smart contract handles wallet locking on-chain
 
-    const handleNewWithdraw = () => {
-        setAmount('')
-        setWithdrawState('form')
-        setLastResponse(null)
-    }
 
     // Voice auth modal
     if (withdrawState === 'voice-auth') {

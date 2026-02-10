@@ -38,17 +38,17 @@ export function DepositPanel() {
             })
             const registryContent = registryObj.data?.content as any
             const tableId = registryContent?.fields?.address_to_wallet?.fields?.id?.id
-            
+
             if (!tableId) {
                 setWalletId(null)
                 return
             }
-            
+
             // Query registry to find wallet ID
             const registryFields = await suiClient.getDynamicFields({
                 parentId: tableId
             })
-            
+
             // Find wallet ID for this address
             for (const field of registryFields.data) {
                 if (field.name && typeof field.name === 'object' && 'value' in field.name) {
@@ -98,16 +98,16 @@ export function DepositPanel() {
         }
 
         setDepositState('processing')
-        
+
         try {
             const amountInMist = Math.floor(parseFloat(amount) * 1_000_000_000) // Convert SUI to MIST
-            
+
             // Create transaction
             const tx = new Transaction()
-            
+
             // Split coin from gas for deposit
             const [coin] = tx.splitCoins(tx.gas, [tx.pure.u64(amountInMist)])
-            
+
             // Call deposit function
             tx.moveCall({
                 target: `${SUI_PACKAGE_ID}::wallet::deposit`,
@@ -118,17 +118,17 @@ export function DepositPanel() {
                 ],
                 typeArguments: ['0x2::sui::SUI']
             })
-            
+
             // Execute transaction
             signAndExecute(
                 { transaction: tx },
                 {
-                    onSuccess: (result) => {
+                    onSuccess: (_result) => {
                         setDepositState('success')
-                        
+
                         // Dispatch event to refresh balance in HomePage
                         window.dispatchEvent(new Event('ram-balance-updated'))
-                        
+
                         // Reset after success
                         setTimeout(() => {
                             setAmount('')
@@ -137,7 +137,7 @@ export function DepositPanel() {
                     },
                     onError: (error) => {
                         setDepositState('form')
-                        
+
                         const errorMsg = error.message || String(error)
                         if (errorMsg.includes('InsufficientBalance') || errorMsg.includes('insufficient')) {
                             showToast('Insufficient balance')
@@ -178,15 +178,15 @@ export function DepositPanel() {
             {toast.visible && (
                 <div className="toast-notification">
                     <svg className="toast-icon" viewBox="0 0 16 16" fill="none">
-                        <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="2"/>
-                        <path d="M8 4v4M8 11h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="2" />
+                        <path d="M8 4v4M8 11h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                     <span>{toast.message}</span>
                 </div>
             )}
             <div className="deposit-panel">
                 <h3 className="deposit-heading">Deposit</h3>
-                
+
                 <div className="amount-input-wrapper">
                     <img src="/sui-sui-logo.svg" alt="SUI" className="sui-logo" />
                     <input
@@ -199,8 +199,8 @@ export function DepositPanel() {
                     />
                 </div>
 
-                <button 
-                    className="deposit-btn" 
+                <button
+                    className="deposit-btn"
                     onClick={handleDeposit}
                     disabled={depositState === 'processing'}
                 >

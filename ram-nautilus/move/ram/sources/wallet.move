@@ -31,16 +31,15 @@ module ram::wallet {
         // Check address uniqueness - each address can only create one wallet
         assert!(!core::registry_contains_address(registry, sender_addr), core::e_address_already_exists());
 
-        // Verify signature
-        // COMMENTED FOR TESTING - Re-enable for production
-        // let payload = core::new_create_wallet_payload(handle);
-        // let is_valid = enclave.verify_signature(
-        //     core::create_wallet_intent(),
-        //     timestamp,
-        //     payload,
-        //     signature,
-        // );
-        // assert!(is_valid, core::e_invalid_signature());
+        // Verify signature from enclave
+        let payload = core::new_create_wallet_payload(handle);
+        let is_valid = enclave.verify_signature(
+            core::create_wallet_intent(),
+            timestamp,
+            payload,
+            signature,
+        );
+        assert!(is_valid, core::e_invalid_signature());
 
         // Create wallet
         let mut wallet = core::new_wallet(handle_str, ctx);
@@ -129,19 +128,18 @@ module ram::wallet {
         signature: &vector<u8>,
         enclave: &Enclave<T>,
     ) {
-        // Verify signature
-        // COMMENTED FOR TESTING - Re-enable for production
-        // let payload = core::new_link_address_payload(
-        //     core::wallet_handle(wallet).into_bytes(),
-        //     address,
-        // );
-        // let is_valid = enclave.verify_signature(
-        //     core::link_address_intent(),
-        //     timestamp,
-        //     payload,
-        //     signature,
-        // );
-        // assert!(is_valid, core::e_invalid_signature());
+        // Verify signature from enclave
+        let payload = core::new_link_address_payload(
+            core::wallet_handle(wallet).into_bytes(),
+            address,
+        );
+        let is_valid = enclave.verify_signature(
+            core::link_address_intent(),
+            timestamp,
+            payload,
+            signature,
+        );
+        assert!(is_valid, core::e_invalid_signature());
 
         // Check replay
         assert!(timestamp > core::wallet_last_timestamp(wallet), core::e_replay_attempt());
@@ -209,19 +207,19 @@ module ram::wallet {
         let expected_type = type_name::get<T>().into_string().into_bytes();
         assert!(coin_type == expected_type, 100); // ECoinTypeMismatch
 
-        // Verify signature from enclave (COMMENTED for testing)
-        // let payload = core::new_withdraw_payload(
-        //     core::wallet_handle(wallet).into_bytes(),
-        //     amount,
-        //     coin_type,
-        // );
-        // let is_valid = enclave.verify_signature(
-        //     core::withdraw_intent(),
-        //     timestamp,
-        //     payload,
-        //     signature,
-        // );
-        // assert!(is_valid, core::e_invalid_signature());
+        // Verify signature from enclave
+        let payload = core::new_withdraw_payload(
+            core::wallet_handle(wallet).into_bytes(),
+            amount,
+            coin_type,
+        );
+        let is_valid = enclave.verify_signature(
+            core::withdraw_intent(),
+            timestamp,
+            payload,
+            signature,
+        );
+        assert!(is_valid, core::e_invalid_signature());
 
         let type_key = type_name::get<T>().into_string();
         let balances = core::wallet_balances_mut(wallet);

@@ -104,19 +104,16 @@ async fn main() -> Result<()> {
         .route("/process_link_address", post(proxy::proxy_to_nautilus))
         .route("/process_bio_auth", post(proxy::proxy_to_nautilus))
         .route("/process_tweet", post(proxy::proxy_to_nautilus))
-        .route(
-            "/process_init_account",
-            post(proxy::proxy_to_nautilus),
-        )
-        .route(
-            "/process_update_handle",
-            post(proxy::proxy_to_nautilus),
-        )
-        .route(
-            "/process_secure_link_wallet",
-            post(proxy::proxy_to_nautilus),
-        )
+        .route("/process_init_account", post(proxy::proxy_to_nautilus))
+        .route("/process_update_handle", post(proxy::proxy_to_nautilus))
+        .route("/process_secure_link_wallet", post(proxy::proxy_to_nautilus))
         .route("/get_attestation", get(proxy::proxy_to_nautilus))
+        // Frontend-facing proxy routes (simpler names)
+        .route("/create_wallet", post(proxy::proxy_to_nautilus))
+        .route("/link_address", post(proxy::proxy_to_nautilus))
+        .route("/bio_auth", post(proxy::proxy_to_nautilus))
+        .route("/transfer", post(proxy::proxy_to_nautilus))
+        .route("/withdraw", post(proxy::proxy_to_nautilus))
         .with_state(state)
         .layer(cors);
 

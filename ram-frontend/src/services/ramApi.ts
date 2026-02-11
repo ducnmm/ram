@@ -1,7 +1,6 @@
 // RAM Backend API Service
-// Connects to the RAM Voice Wallet Server
+// All requests are proxied through the backend to Nautilus server
 
-const RAM_API_URL = import.meta.env.VITE_RAM_API_URL || 'http://localhost:3000';
 const RAM_BACKEND_URL = import.meta.env.VITE_RAM_BACKEND_URL || 'http://localhost:4000';
 
 // Sui Blockchain Constants
@@ -101,7 +100,7 @@ export interface HealthCheckResponse {
  * Check if RAM server is healthy
  */
 export async function healthCheck(): Promise<HealthCheckResponse> {
-  const response = await fetch(`${RAM_API_URL}/health_check`);
+  const response = await fetch(`${RAM_BACKEND_URL}/health_check`);
   if (!response.ok) {
     throw new Error(`Health check failed: ${response.status}`);
   }
@@ -112,7 +111,7 @@ export async function healthCheck(): Promise<HealthCheckResponse> {
  * Create a new RAM wallet
  */
 export async function createWallet(handle: string): Promise<CreateWalletResponse> {
-  const response = await fetch(`${RAM_API_URL}/create_wallet`, {
+  const response = await fetch(`${RAM_BACKEND_URL}/create_wallet`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -135,7 +134,7 @@ export async function linkAddress(
   handle: string,
   walletAddress: string
 ): Promise<LinkAddressResponse> {
-  const response = await fetch(`${RAM_API_URL}/link_address`, {
+  const response = await fetch(`${RAM_BACKEND_URL}/link_address`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -169,7 +168,7 @@ export async function bioAuth(
   const decimals = getDecimals(coinType);
   const amountRaw = Math.round(amount * Math.pow(10, decimals));
 
-  const response = await fetch(`${RAM_API_URL}/bio_auth`, {
+  const response = await fetch(`${RAM_BACKEND_URL}/bio_auth`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -199,7 +198,7 @@ export async function requestTransferSignature(
   amount: number,
   coinType: string
 ): Promise<TransferResponse> {
-  const response = await fetch(`${RAM_API_URL}/transfer`, {
+  const response = await fetch(`${RAM_BACKEND_URL}/transfer`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -228,7 +227,7 @@ export async function requestWithdrawSignature(
   amount: number,
   coinType: string
 ): Promise<WithdrawResponse> {
-  const response = await fetch(`${RAM_API_URL}/withdraw`, {
+  const response = await fetch(`${RAM_BACKEND_URL}/withdraw`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

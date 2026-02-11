@@ -17,6 +17,10 @@ Crypto wallets today rely on passwords and seed phrases. If someone forces you t
 - **Blind response** — The app never reveals whether duress was detected; only the blockchain knows
 - **Zero trust** — Voice analysis + signing happens inside AWS Nitro Enclave (TEE), tamper-proof even from the server operator
 
+## Why It Matters for AI Agents
+
+AI agents can now execute commands and sign transactions. RAM ensures **no agent can bypass voice verification** — they can propose, but only a calm human voice can authorize.
+
 ## Built On
 
-**Sui blockchain** + **Nautilus TEE framework** + **Hume AI** (emotion analysis)
+**Sui blockchain** + **Nautilus TEE framework** + **Hume AI** (emotion analysis) + **OpenClaw** (AI agent gateway)

@@ -36,7 +36,10 @@ pub async fn proxy_to_nautilus(
         })?;
 
     // Forward request to Nautilus
-    let client = Client::new();
+    let client = Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     let method = reqwest::Method::from_bytes(method_str.as_bytes())
         .map_err(|_| StatusCode::METHOD_NOT_ALLOWED)?;
     
